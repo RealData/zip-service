@@ -1,34 +1,9 @@
 package readdir 
 
-import ( 
-	"path"
-	"sort"
-	"os"
-)
+import "os"
 
-type FileInfo struct {	
-	Name string 
-	Size int64  
-}
-
-func filterNames(files []FileInfo, pattern string) ([]FileInfo, error) {  
-
-	filtered := make([]FileInfo, 0, len(files)) 
-	for _, file := range files {
-		if matched, err := path.Match(pattern, file.Name); err == nil {
-			if matched {
-				filtered = append(filtered, file) 
-			}
-		} else {
-			return nil, err 
-		}
-	}
-
-	return filtered, nil 
-
-}
-
-func ReadDir(dirStr string, pattern string, count int) ([]FileInfo, error) {
+// ReadDir reads file info from a directory, filter out subdirectories, filter files by name pattern, and returns `top` largest files  
+func ReadDir(dirStr string, pattern string, top int, threads int) ([]FileInfo, error) {
 	
 	dir, err := os.Open(dirStr) 
 	if err == nil {
@@ -54,17 +29,16 @@ func ReadDir(dirStr string, pattern string, count int) ([]FileInfo, error) {
 	} 
 
 	if pattern != "" {
-		files, err = filterNames(files, pattern) 
+		files, err = filterFiles(files, pattern) 
 	} 
 	if err != nil {
 		return nil, err 
 	}
 	
-	//TODO There is more effective implementation for large directories  
-	sort.Slice(files, func(i, j int) bool { return files[i].Size > files[j].Size }) 
+	files = parallelFindTop(files, top, threads)
 	
-	if len(files) >= count {
-		return files[:count], nil  
+	if len(files) >= top {
+		return files[:top], nil  
 	} else {
 		return files, nil 
 	}
