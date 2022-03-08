@@ -7,10 +7,10 @@ func filterFiles(files []FileInfo, pattern string) ([]FileInfo, error) {
 
 	filtered := make([]FileInfo, 0, len(files)) 
 	for _, file := range files {
-		if matched, err := path.Match(pattern, file.Name); err == nil && matched {
-				filtered = append(filtered, file) 
-		} else {
+		if matched, err := path.Match(pattern, file.Name); err != nil { 
 			return nil, err 
+		} else if matched {
+			filtered = append(filtered, file) 
 		}
 	}
 
