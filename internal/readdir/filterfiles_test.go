@@ -4,45 +4,34 @@ import "testing"
 
 func TestFilterFiles(t *testing.T) {
 
-	t.Run("file FILE pattern FILE", func(t *testing.T) {
-		files := []FileInfo{{"FILE", 10}}
-		filtered, err := filterFiles(files, "FILE") 
-		if err != nil {
-			t.Error(err) 
-		} 
-		if len(filtered) == 1 {
-			if filtered[0].Name != "FILE" {
-				t.Error("Name should be 'FILE'")
-			}
-		} else {
-			t.Error("Should return one file")
-		}
-	})
+	var tests = []struct { 
+		scenario string 
+		files []FileInfo  
+		pattern string 
+		filtered []FileInfo 
+	} {
+		{"file FILE pattern FILE", []FileInfo{{"FILE", 10}}, "FILE", []FileInfo{{"FILE", 10}}}, 
+		{"file FILE pattern F*", []FileInfo{{"FILE", 10}}, "F*", []FileInfo{{"FILE", 10}}}, 
+		{"file FILE pattern F", []FileInfo{{"FILE", 10}}, "F", []FileInfo{}}, 
+		{"file FILE,FILE2 pattern FILE", []FileInfo{{"FILE", 10}, {"FILE2", 10}}, "FILE", []FileInfo{{"FILE", 10}}}, 
+		{"file FILE,FILE2 pattern F*", []FileInfo{{"FILE", 10}, {"FILE2", 10}}, "F*", []FileInfo{{"FILE", 10}, {"FILE2", 10}}},  
+	}
 
-	t.Run("file FILE pattern *F*", func(t *testing.T) {
-		files := []FileInfo{{"FILE", 10}}
-		filtered, err := filterFiles(files, "*F*") 
-		if err != nil {
-			t.Error(err) 
-		} 
-		if len(filtered) == 1 {
-			if filtered[0].Name != "FILE" {
-				t.Error("Name should be 'FILE'")
+	for _, test := range tests { 
+		t.Run(test.scenario, func(t *testing.T) {
+			filtered, err := filterFiles(test.files, test.pattern) 
+			if err != nil {
+				t.Error(err) 
 			}
-		} else {
-			t.Error("Should return one file")
-		}
-	})
-	
-	t.Run("file FILE pattern F", func(t *testing.T) {
-		files := []FileInfo{{"F", 10}}
-		filtered, err := filterFiles(files, "FILE") 
-		if err != nil {
-			t.Error(err) 
-		} 
-		if len(filtered) > 0 {
-			t.Error("Should return no files")
-		}
-	})
-
+			if len(filtered) != len(test.filtered) {
+				t.Errorf("Length of the result should be %d, found %d", len(test.filtered), len(filtered)) 
+				return  
+			}
+			for i, file := range test.filtered {
+				if file.Name != filtered[i].Name {
+					t.Errorf("Name of file #%d should be %s, found %s", i, file.Name, filtered[i].Name)
+				}
+			} 
+		})
+	}
 }
