@@ -88,34 +88,3 @@ func parallelFindTop(files []FileInfo, top int, threads int) []FileInfo {
 
 } 
 
-// func findTop(files []FileInfo, top int) []FileInfo  { 
-	
-// 	l := len(files)
-
-// 	m := make(map[string]int64, l) 
-// 	for _, file := range files {
-// 		m[file.Name] = file.Size 
-// 	}
-
-// 	if l < top {
-// 		top = l 
-// 	} 
-
-// 	res := make([]FileInfo, top)
-
-// 	for i := 0; i < top; i++ {
-// 		maxk := "" 
-// 		maxv := int64(-1)
-// 		for k, v := range m {
-// 			if v > maxv {
-// 				maxk = k 
-// 				maxv = v
-// 			}
-// 		}
-// 		res[i] = FileInfo{maxk, maxv} 
-// 		delete(m, maxk)
-// 	}
-
-// 	return res
-
-// }

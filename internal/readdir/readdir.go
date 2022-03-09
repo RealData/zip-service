@@ -2,10 +2,10 @@ package readdir
 
 import "os"
 
-// ReadDir reads file info from a directory, filter out subdirectories, filter files by name pattern, and returns `top` largest files  
-func ReadDir(dirStr string, pattern string, top int, threads int) ([]FileInfo, error) {
+// ReadDir reads file info from a directory filtering out subdirectories
+func readDir(dirPath string) ([]FileInfo, error) {
 	
-	dir, err := os.Open(dirStr) 
+	dir, err := os.Open(dirPath) 
 	if err == nil {
 		defer dir.Close()  
 	} else {
@@ -28,19 +28,7 @@ func ReadDir(dirStr string, pattern string, top int, threads int) ([]FileInfo, e
 		}
 	} 
 
-	if pattern != "" {
-		files, err = filterFiles(files, pattern) 
-	} 
-	if err != nil {
-		return nil, err 
-	}
-	
-	files = parallelFindTop(files, top, threads)
-	
-	if len(files) >= top {
-		return files[:top], nil  
-	} else {
-		return files, nil 
-	}
+	return files, nil 
 
 }
+
