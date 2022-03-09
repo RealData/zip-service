@@ -14,6 +14,7 @@ const (
 	PATTERN = "" 
 	FILE = ""
 	DIR = "." 
+	THREADS = 1 
 )
 
 var (
@@ -23,7 +24,8 @@ var (
 	file string 
 	dir string 
 	compress bool  
-	extract bool
+	extract bool 
+	threads int 
 )
 
 func init() { 
@@ -42,6 +44,8 @@ func init() {
 	flag.BoolVar(&compress, "c", false, "Compress") 
 	flag.BoolVar(&extract, "extract", false, "Extract") 
 	flag.BoolVar(&extract, "e", false, "Extract") 
+	flag.IntVar(&threads, "nthreads", THREADS, "Number of threads") 
+	flag.IntVar(&threads, "n", THREADS, "Number of threads")
 
 	flag.Parse() 
 
@@ -63,5 +67,13 @@ func init() {
 }
 
 func main() {
+
+	files, err := readdir.ReadDirTopFiles(dir, pattern, top, threads) 
+	if err != nil { 
+		fmt.Println(err) 
+		os.Exit(1)
+	}
+
+	compressextract.CompressFiles(file, dir, files)  
 
 }
