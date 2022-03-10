@@ -74,6 +74,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	compressextract.CompressFiles(file, dir, files)  
+files = []readdir.FileInfo{{"FILE1.m4v", 10}, {"FILE2.m4v", 10}} 
+
+	//compressextract.CompressFiles(file, dir, files)  
+	//compressextract.CompressFileGZIP("HHHHHH.gzip", "HHHHHH")  
+
+	// dirPath, _ := compressextract.CompressFiles(".", "gzip", "", []readdir.FileInfo{{"HHHHHH", 10}, {"HHHHHH_.zip", 10}}, compressextract.CompressFileGZIP) 
+	// fmt.Println(dirPath)
+	// compressextract.RawFilesToZIP("file.zip", "gzip", dirPath, []readdir.FileInfo{{"HHHHHH", 10}, {"HHHHHH_.zip", 10}}) 
+
+	compressextract.CompressAndZipFiles(".", file, "gzip", dir, files, threads, compressextract.CompressFileGZIP)
 
 }
