@@ -134,7 +134,7 @@ func RawFilesToZIP(destFilePath string, destExt string, sourceDirPath string, so
 			return err 
 		} 
 
-		fileWriter, err := zipWriter.CreateRaw(&zip.FileHeader{Name: file.Name}) 
+		fileWriter, err := zipWriter.CreateRaw(&zip.FileHeader{Name: file.Name, CompressedSize64: uint64(file.Size), UncompressedSize64: uint64(file.Size)})  
 		if err != nil {
 			return err 
 		} 
