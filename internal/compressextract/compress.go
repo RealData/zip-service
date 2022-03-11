@@ -12,6 +12,7 @@ import (
 
 type Compressor func(destFilePath string, sourceFilePath string) error  
 
+// CompressFileGZIP compresses a file to GZIP 
 func CompressFileGZIP(destFilePath string, sourceFilePath string) error {
 
 	sourceFile, err := os.Open(sourceFilePath)
@@ -24,21 +25,22 @@ func CompressFileGZIP(destFilePath string, sourceFilePath string) error {
 		return err 
 	} 
 
-	w := gzip.NewWriter(destFile) 
+	writer := gzip.NewWriter(destFile) 
 	
 	defer sourceFile.Close() 
 	defer destFile.Close()
-	defer w.Close() 
+	defer writer.Close() 
 
-	io.Copy(w, sourceFile) 
+	io.Copy(writer, sourceFile) 
 	
-	w.Close() 
+	writer.Close() 
 
 	return nil 
 
 }
 
-func parallelCompressEachFile(destDirPath string, destExt string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (err error) { 
+// parallelCompressEachFile concurently compresses each file from a list using specified compressor 
+func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (err error) { 
 
 	numJobs := len(sourceFiles) 
 	jobChan := make(chan r.FileInfo, numJobs) 
@@ -52,7 +54,7 @@ func parallelCompressEachFile(destDirPath string, destExt string, sourceDirPath 
 		go func(jobChan <-chan r.FileInfo, resChan chan<- error) {
 			for file := range jobChan { 
 				fmt.Println(time.Now())
-				destFilePath := path.Join(destDirPath, file.Name) + "." + destExt 
+				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
 				fmt.Println(sourceFilePath)
 				err := compressor(destFilePath, sourceFilePath)  
@@ -79,33 +81,34 @@ func parallelCompressEachFile(destDirPath string, destExt string, sourceDirPath 
 
 }
 
-func compressEachFile_(destDirPath string, destExt string, sourceDirPath string, sourceFiles []r.FileInfo, compressor Compressor) error { 
-	for _, file := range sourceFiles { 
-		destFilePath := path.Join(destDirPath, file.Name) + "." + destExt 
-		sourceFilePath := path.Join(sourceDirPath, file.Name) 
-		err := compressor(destFilePath, sourceFilePath)   
-		if err != nil {
-			return err 
-		}
-	} 
-	return nil 
-}
+// func compressEachFile_(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, compressor Compressor) error { 
+// 	for _, file := range sourceFiles { 
+// 		destFilePath := path.Join(destDirPath, file.Name)  
+// 		sourceFilePath := path.Join(sourceDirPath, file.Name) 
+// 		err := compressor(destFilePath, sourceFilePath)   
+// 		if err != nil {
+// 			return err 
+// 		}
+// 	} 
+// 	return nil 
+// }
 
-func CompressAndZipFiles(destDirPath string, destFilePath string, destExt string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (string, error) {
+// CompressAndZipFiles concurently compresses files from a list using specified compressor, writes them into temporary directory, and then writes them into ZIP 
+func CompressAndZipFiles(destDirPath string, destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (string, error) {
 
 	dirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
-	defer os.RemoveAll(dirPath)
+	//defer os.RemoveAll(dirPath)
 	
 	if err != nil {
 		return "", err  
 	}
 
-	err = parallelCompressEachFile(dirPath, destExt, sourceDirPath, sourceFiles, threads, compressor) 
+	err = parallelCompressEachFile(dirPath, sourceDirPath, sourceFiles, threads, compressor) 
 	if err != nil {
 		return "", err 
 	}
 
-	err = RawFilesToZIP(destFilePath, destExt, dirPath, sourceFiles) 
+	err = RawFilesToZIP(destFilePath, dirPath, sourceFiles) 
 	if err != nil {
 		return "", err 
 	}
@@ -114,7 +117,8 @@ func CompressAndZipFiles(destDirPath string, destFilePath string, destExt string
 
 }
 
-func RawFilesToZIP(destFilePath string, destExt string, sourceDirPath string, sourceFiles []r.FileInfo) error {
+// RawFilesToZIP writes files to ZIP file 
+func RawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo) error {
 
 	destFile, err := os.Create(destFilePath) 
 	if err != nil {
@@ -128,13 +132,20 @@ func RawFilesToZIP(destFilePath string, destExt string, sourceDirPath string, so
 
 	for _, file := range sourceFiles {
 
-		sourceFilePath := path.Join(sourceDirPath, file.Name) + "." + destExt 
+		sourceFilePath := path.Join(sourceDirPath, file.Name) 
 		sourceFile, err := os.Open(sourceFilePath)
 		if err != nil {
 			return err 
 		} 
 
-		fileWriter, err := zipWriter.CreateRaw(&zip.FileHeader{Name: file.Name, CompressedSize64: uint64(file.Size), UncompressedSize64: uint64(file.Size)})  
+		fileInfo, err := sourceFile.Stat() 
+		if err != nil {
+			return err 
+		} 
+		compressedSize := fileInfo.Size()
+
+
+		fileWriter, err := zipWriter.CreateRaw(&zip.FileHeader{Name: file.Name, CompressedSize64: uint64(compressedSize), UncompressedSize64: uint64(file.Size)})  
 		if err != nil {
 			return err 
 		} 
