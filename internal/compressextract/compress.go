@@ -2,15 +2,11 @@ package compressextract
 import (
 	"archive/zip"  
 	"compress/gzip"
-	"fmt"
 	"io"
 	"os"
 	"path" 
-	"time"
 	r "zip-service/internal/readdir"
 ) 
-
-type Compressor func(destFilePath string, sourceFilePath string) error  
 
 // CompressFileGZIP compresses a file to GZIP 
 func CompressFileGZIP(destFilePath string, sourceFilePath string) error {
@@ -53,14 +49,10 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 	for w := 1; w <= threads; w++ {
 		go func(jobChan <-chan r.FileInfo, resChan chan<- error) {
 			for file := range jobChan { 
-				fmt.Println(time.Now())
 				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
-				fmt.Println(sourceFilePath)
 				err := compressor(destFilePath, sourceFilePath)  
 				resChan <- err 
-				fmt.Println(time.Now())
-
 			}
 		}(jobChan, resChan)
 	} 
@@ -94,26 +86,28 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 // }
 
 // CompressAndZipFiles concurently compresses files from a list using specified compressor, writes them into temporary directory, and then writes them into ZIP 
-func CompressAndZipFiles(destDirPath string, destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (string, error) {
+func CompressAndZipFiles(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) error {
 
-	dirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
-	//defer os.RemoveAll(dirPath)
+	destDirPath, _ := path.Split(destFilePath)
+
+	tempDirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
+	defer os.RemoveAll(tempDirPath)
 	
 	if err != nil {
-		return "", err  
+		return err  
 	}
 
-	err = parallelCompressEachFile(dirPath, sourceDirPath, sourceFiles, threads, compressor) 
+	err = parallelCompressEachFile(tempDirPath, sourceDirPath, sourceFiles, threads, compressor) 
 	if err != nil {
-		return "", err 
+		return err 
 	}
 
-	err = RawFilesToZIP(destFilePath, dirPath, sourceFiles) 
+	err = RawFilesToZIP(destFilePath, tempDirPath, sourceFiles) 
 	if err != nil {
-		return "", err 
+		return err 
 	}
 	
-	return dirPath, nil 
+	return nil 
 
 }
 
