@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt" 
 	"os"
-	"zip-service/internal/readdir" 
+//	"zip-service/internal/readdir" 
 	"zip-service/internal/compressextract" 
 )
 
@@ -68,18 +68,22 @@ func init() {
 
 func main() {
 
-	files, err := readdir.ReadDirTopFiles(dir, pattern, top, threads) 
-	if err != nil { 
-		fmt.Println(err) 
-		os.Exit(1)
-	}
+	// files, err := readdir.ReadDirTopFiles(dir, pattern, top, threads) 
+	// if err != nil { 
+	// 	fmt.Println(err) 
+	// 	os.Exit(1)
+	// }
 
-	files = []readdir.FileInfo{{"FILE1.m4v", 770561710}, {"FILE2.m4v", 831848367}} 
+	// files = []readdir.FileInfo{{"FILE1", 5}, {"FILE2", 5}} 
 
-	compressextract.CompressAndZipFiles(".", file, "gzip", dir, files, threads, compressextract.CompressFileGZIP) 
+	// compressextract.CompressAndZipFiles(".", file, dir, files, threads, compressextract.CompressFileGZIP) 
 
-	compressextract.ExtractFileNames(file) 
+	// compressextract.ExtractFileNames(file) 
 
-	compressextract.ExtractFiles(file)
+	// compressextract.ZIPToRawFiles(file) 
+
+	// compressextract.ExtractFileZIP()
+
+	compressextract.UnzipAndExtractFiles(dir, file, compressextract.ExtractFileGZIP)
 
 }
