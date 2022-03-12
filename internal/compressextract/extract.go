@@ -1,6 +1,7 @@
 package compressextract 
 import (
-	"archive/zip"
+	"archive/zip" 
+	"fmt" 
 	"io" 
 	"os" 
 	"path"
@@ -26,31 +27,40 @@ func ExtractFileInfo(sourceFilePath string) ([]filelist.FileInfo, error)  {
 }
 
 // zipToRawFiles reads files from ZIP file 
-func zipToRawFiles(destDirPath string, sourceFilePath string) ([]filelist.FileInfo, error) {
+func zipToRawFiles(destDirPath string, sourceFilePath string, files []filelist.FileInfo) ([]filelist.FileInfo, error) {
 
 	zipReader, err := zip.OpenReader(sourceFilePath) 
 	if err != nil {
 		return nil, err 
 	} 
 	defer zipReader.Close() 
+
+	filesMap := make(map[string]bool, len(files)) 
+	for _, file := range files {
+		filesMap[file.Name] = true 
+	}
 	
-	var files []filelist.FileInfo  
+	var res []filelist.FileInfo  
 
 	for _, f := range zipReader.File {
-		reader, err := f.OpenRaw() 
-		writer, err := os.Create(path.Join(destDirPath, f.Name)) 
-		_, err = io.Copy(writer, reader) 
-		if err != nil {
-			return nil, err 
-		} 
-		files = append(files, filelist.FileInfo{f.Name, int64(f.CompressedSize64)})
-		writer.Close()
+		if _, ok := filesMap[f.Name]; ok {
+			reader, err := f.OpenRaw() 
+			writer, err := os.Create(path.Join(destDirPath, f.Name)) 
+			fmt.Printf("Reading %s from ZIP \n", f.Name)
+			_, err = io.Copy(writer, reader) 
+			if err != nil {
+				return nil, err 
+			} 
+			res = append(res, filelist.FileInfo{f.Name, int64(f.CompressedSize64)})
+			writer.Close() 
+		}
 	}
 
-	return files, nil 
+	return res, nil 
 
 }
 
+// parallelExtractEachFile concurently extracts files from a list using specified extractor 
 func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []filelist.FileInfo, threads int, extractor Extractor) (err error) { 
 
 	numJobs := len(sourceFiles) 
@@ -66,6 +76,7 @@ func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFil
 			for file := range jobChan { 
 				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
+				fmt.Printf("Extracting %s \n", file.Name)
 				err := extractor(destFilePath, sourceFilePath)  
 				resChan <- err 
 			}
@@ -102,7 +113,7 @@ func extractEachFile(destDirPath string, sourceDirPath string, sourceFiles []fil
 } 
 
 // UnzipAndExtractFiles unzip ZIP file, writes them into temporary directory, and then extracts each file 
-func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, threads int, extractor Extractor) error {
+func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, files []filelist.FileInfo, threads int, extractor Extractor) error {
 	
 	tempDirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
 	if err != nil {
@@ -110,7 +121,7 @@ func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, threads int
 	}
 	defer os.RemoveAll(tempDirPath)
 
-	files, err := zipToRawFiles(tempDirPath, sourceFilePath)  
+	files, err = zipToRawFiles(tempDirPath, sourceFilePath, files)  
 	if err != nil {
 		return err 
     }

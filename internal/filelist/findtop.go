@@ -14,7 +14,7 @@ func findTop(files []FileInfo, top int) []FileInfo {
 
 	l := len(files)
 	if l < top {
-		top = l  
+		return files 
 	}
 
 	if top < 1 {
@@ -58,8 +58,8 @@ func ParallelFindTop(files []FileInfo, top int, threads int) []FileInfo {
 		threads = l 
 	} 
 
-	if top > l {
-		top = l 
+	if l < top {
+		return files  
 	}
 
 	res := make([]FileInfo, 0, threads * top)

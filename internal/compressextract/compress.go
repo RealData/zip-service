@@ -1,6 +1,7 @@
 package compressextract  
 import (
-	"archive/zip"  
+	"archive/zip"   
+	"fmt"
 	"io"
 	"os"
 	"path" 
@@ -23,6 +24,7 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 			for file := range jobChan { 
 				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
+				fmt.Printf("Compressing %s \n", file.Name)
 				err := compressor(destFilePath, sourceFilePath)  
 				resChan <- err 
 			}
@@ -55,7 +57,7 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 // 		}
 // 	} 
 // 	return nil 
-// }
+// }999
 
 // rawFilesToZIP writes files to ZIP file 
 func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []filelist.FileInfo) error {
@@ -90,6 +92,7 @@ func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []file
 			return err 
 		} 
 
+		fmt.Printf("Writing %s to ZIP \n", file.Name)
 		io.Copy(fileWriter, sourceFile) 
 
 	}
