@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing" 
+	"zip-service/internal/filelist"
 )
 
 type File struct {
@@ -24,7 +25,7 @@ func TestReadDirTopFiles(t *testing.T) {
 		{
 			"5 files, top=10, threads=1, pattern=''", 
 			[]File{{"file1", "LongContent"}, {"file2", "file2"}, {"file3", ""}, {"file4", "HH"}, {"file5", "Content"}}, 
-			[]FileInfo{{"file1", 11}, {"file5", 7}, {"file2", 5}, {"file4", 2}, {"file3", 0}}, 
+			[]filelist.FileInfo{{"file1", 11}, {"file5", 7}, {"file2", 5}, {"file4", 2}, {"file3", 0}}, 
 			10, 
 			1, 
 			"", 
@@ -32,7 +33,7 @@ func TestReadDirTopFiles(t *testing.T) {
 		{
 			"5 files, top=10, threads=2, pattern=''", 
 			[]File{{"file1", "LongContent"}, {"file2", "file2"}, {"file3", ""}, {"file4", "HH"}, {"file5", "Content"}}, 
-			[]FileInfo{{"file1", 11}, {"file5", 7}, {"file2", 5}, {"file4", 2}, {"file3", 0}}, 
+			[]filelist.FileInfo{{"file1", 11}, {"file5", 7}, {"file2", 5}, {"file4", 2}, {"file3", 0}}, 
 			10, 
 			2, 
 			"", 
@@ -40,7 +41,7 @@ func TestReadDirTopFiles(t *testing.T) {
 		{
 			"5 files, top=2, threads=1, pattern=''", 
 			[]File{{"file1", "LongContent"}, {"file2", "file2"}, {"file3", ""}, {"file4", "HH"}, {"file5", "Content"}}, 
-			[]FileInfo{{"file1", 11}, {"file5", 7}}, 
+			[]filelist.FileInfo{{"file1", 11}, {"file5", 7}}, 
 			2, 
 			1, 
 			"", 
@@ -48,7 +49,7 @@ func TestReadDirTopFiles(t *testing.T) {
 		{
 			"5 files, top=2, threads=2, pattern=''", 
 			[]File{{"file1", "LongContent"}, {"file2", "file2"}, {"file3", ""}, {"file4", "HH"}, {"file5", "Content"}}, 
-			[]FileInfo{{"file1", 11}, {"file5", 7}}, 
+			[]filelist.FileInfo{{"file1", 11}, {"file5", 7}}, 
 			2, 
 			2, 
 			"", 

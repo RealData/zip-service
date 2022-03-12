@@ -4,21 +4,21 @@ import (
 	"io" 
 	"os" 
 	"path"
-	r "zip-service/internal/readdir"
+	"zip-service/internal/filelist"
 )
 
 // ExtractFileInfo returns list of file info for files in a ZIP file 
-func ExtractFileInfo(sourceFilePath string) ([]r.FileInfo, error)  {
+func ExtractFileInfo(sourceFilePath string) ([]filelist.FileInfo, error)  {
 
 	reader, err := zip.OpenReader(sourceFilePath) 
 	if err != nil {
 		return nil, err  
 	} 
 
-	var files []r.FileInfo 
+	var files []filelist.FileInfo 
 
 	for _, f := range reader.File {
-		files = append(files, r.FileInfo{Name: f.Name, Size: int64(f.CompressedSize64)})
+		files = append(files, filelist.FileInfo{Name: f.Name, Size: int64(f.CompressedSize64)})
 	}
 
 	return files, nil 
@@ -26,7 +26,7 @@ func ExtractFileInfo(sourceFilePath string) ([]r.FileInfo, error)  {
 }
 
 // zipToRawFiles reads files from ZIP file 
-func zipToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, error) {
+func zipToRawFiles(destDirPath string, sourceFilePath string) ([]filelist.FileInfo, error) {
 
 	zipReader, err := zip.OpenReader(sourceFilePath) 
 	if err != nil {
@@ -34,7 +34,7 @@ func zipToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, err
 	} 
 	defer zipReader.Close() 
 	
-	var files []r.FileInfo  
+	var files []filelist.FileInfo  
 
 	for _, f := range zipReader.File {
 		reader, err := f.OpenRaw() 
@@ -43,7 +43,7 @@ func zipToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, err
 		if err != nil {
 			return nil, err 
 		} 
-		files = append(files, r.FileInfo{f.Name, int64(f.CompressedSize64)})
+		files = append(files, filelist.FileInfo{f.Name, int64(f.CompressedSize64)})
 		writer.Close()
 	}
 
@@ -51,10 +51,10 @@ func zipToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, err
 
 }
 
-func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, extractor Extractor) (err error) { 
+func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []filelist.FileInfo, threads int, extractor Extractor) (err error) { 
 
 	numJobs := len(sourceFiles) 
-	jobChan := make(chan r.FileInfo, numJobs) 
+	jobChan := make(chan filelist.FileInfo, numJobs) 
 	resChan := make(chan error, numJobs) 
 	
 	if threads > numJobs {
@@ -62,7 +62,7 @@ func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFil
 	}
 
 	for w := 1; w <= threads; w++ {
-		go func(jobChan <-chan r.FileInfo, resChan chan<- error) {
+		go func(jobChan <-chan filelist.FileInfo, resChan chan<- error) {
 			for file := range jobChan { 
 				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
@@ -89,7 +89,7 @@ func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFil
 }
 
 // extractEachFile extracts files from a list using specified compressor 
-func extractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, extractor Extractor) error { 
+func extractEachFile(destDirPath string, sourceDirPath string, sourceFiles []filelist.FileInfo, extractor Extractor) error { 
 	for _, file := range sourceFiles { 
 		destFilePath := path.Join(destDirPath, file.Name)  
 		sourceFilePath := path.Join(sourceDirPath, file.Name) 

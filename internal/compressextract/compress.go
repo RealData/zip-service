@@ -4,14 +4,14 @@ import (
 	"io"
 	"os"
 	"path" 
-	r "zip-service/internal/readdir"
+	"zip-service/internal/filelist"
 ) 
 
 // parallelCompressEachFile concurently compresses each file from a list using specified compressor 
-func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (err error) { 
+func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFiles []filelist.FileInfo, threads int, compressor Compressor) (err error) { 
 
 	numJobs := len(sourceFiles) 
-	jobChan := make(chan r.FileInfo, numJobs) 
+	jobChan := make(chan filelist.FileInfo, numJobs) 
 	resChan := make(chan error, numJobs) 
 	
 	if threads > numJobs {
@@ -19,7 +19,7 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 	}
 
 	for w := 1; w <= threads; w++ {
-		go func(jobChan <-chan r.FileInfo, resChan chan<- error) {
+		go func(jobChan <-chan filelist.FileInfo, resChan chan<- error) {
 			for file := range jobChan { 
 				destFilePath := path.Join(destDirPath, file.Name)  
 				sourceFilePath := path.Join(sourceDirPath, file.Name) 
@@ -58,7 +58,7 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 // }
 
 // rawFilesToZIP writes files to ZIP file 
-func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo) error {
+func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []filelist.FileInfo) error {
 
 	destFile, err := os.Create(destFilePath) 
 	if err != nil {
@@ -101,7 +101,7 @@ func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.Fi
 }
 
 // CompressAndZipFiles concurently compresses files from a list using specified compressor, writes them into temporary directory, and then writes them into ZIP 
-func CompressAndZipFiles(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) error {
+func CompressAndZipFiles(destFilePath string, sourceDirPath string, sourceFiles []filelist.FileInfo, threads int, compressor Compressor) error {
 
 	destDirPath, _ := path.Split(destFilePath)
 

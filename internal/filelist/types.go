@@ -1,4 +1,4 @@
-package readdir 
+package filelist 
 
 type FileInfo struct {	
 	Name string 

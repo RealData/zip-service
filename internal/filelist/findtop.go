@@ -1,4 +1,4 @@
-package readdir 
+package filelist 
 
 import ( 
 	"math"
@@ -44,8 +44,8 @@ func findTop(files []FileInfo, top int) []FileInfo {
 
 }
 
-// parallelFindTop finds top fies by their size in a list of FileInfo. It splits the list into `threads` chunks and concurrently calls `findTop` for each of the chunks, the top files from the chunks are then merged, sorted, and `top` files are selected 
-func parallelFindTop(files []FileInfo, top int, threads int) []FileInfo {
+// ParallelFindTop finds top fies by their size in a list of FileInfo. It splits the list into `threads` chunks and concurrently calls `findTop` for each of the chunks, the top files from the chunks are then merged, sorted, and `top` files are selected 
+func ParallelFindTop(files []FileInfo, top int, threads int) []FileInfo {
 
 	if top < 1 {
 		return []FileInfo{} 

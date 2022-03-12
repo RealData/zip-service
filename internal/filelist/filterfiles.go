@@ -1,9 +1,9 @@
-package readdir 
+package filelist  
 
 import "path"
 
-// filterFiles filter a list of FileInfo in accordance with the pattern 
-func filterFiles(files []FileInfo, pattern string) ([]FileInfo, error) {  
+// FilterFiles filter a list of FileInfo in accordance with the pattern 
+func FilterFiles(files []FileInfo, pattern string) ([]FileInfo, error) {  
 
 	filtered := make([]FileInfo, 0, len(files)) 
 	for _, file := range files {

@@ -1,4 +1,4 @@
-package readdir 
+package filelist 
 
 import "testing" 
 
