@@ -1,39 +1,11 @@
 package compressextract  
 import (
 	"archive/zip"  
-	"compress/gzip"
 	"io"
 	"os"
 	"path" 
 	r "zip-service/internal/readdir"
 ) 
-
-// CompressFileGZIP compresses a file to GZIP 
-func CompressFileGZIP(destFilePath string, sourceFilePath string) error {
-
-	sourceFile, err := os.Open(sourceFilePath)
-	if err != nil {
-		return err 
-	}
-	
-	destFile, err := os.Create(destFilePath) 
-	if err != nil {
-		return err 
-	} 
-
-	writer := gzip.NewWriter(destFile) 
-	
-	defer sourceFile.Close() 
-	defer destFile.Close()
-	defer writer.Close() 
-
-	io.Copy(writer, sourceFile) 
-	
-	writer.Close() 
-
-	return nil 
-
-}
 
 // parallelCompressEachFile concurently compresses each file from a list using specified compressor 
 func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) (err error) { 
@@ -85,34 +57,8 @@ func parallelCompressEachFile(destDirPath string, sourceDirPath string, sourceFi
 // 	return nil 
 // }
 
-// CompressAndZipFiles concurently compresses files from a list using specified compressor, writes them into temporary directory, and then writes them into ZIP 
-func CompressAndZipFiles(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) error {
-
-	destDirPath, _ := path.Split(destFilePath)
-
-	tempDirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
-	defer os.RemoveAll(tempDirPath)
-	
-	if err != nil {
-		return err  
-	}
-
-	err = parallelCompressEachFile(tempDirPath, sourceDirPath, sourceFiles, threads, compressor) 
-	if err != nil {
-		return err 
-	}
-
-	err = RawFilesToZIP(destFilePath, tempDirPath, sourceFiles) 
-	if err != nil {
-		return err 
-	}
-	
-	return nil 
-
-}
-
-// RawFilesToZIP writes files to ZIP file 
-func RawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo) error {
+// rawFilesToZIP writes files to ZIP file 
+func rawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo) error {
 
 	destFile, err := os.Create(destFilePath) 
 	if err != nil {
@@ -150,6 +96,32 @@ func RawFilesToZIP(destFilePath string, sourceDirPath string, sourceFiles []r.Fi
 
 	zipWriter.Close()
 
+	return nil 
+
+}
+
+// CompressAndZipFiles concurently compresses files from a list using specified compressor, writes them into temporary directory, and then writes them into ZIP 
+func CompressAndZipFiles(destFilePath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, compressor Compressor) error {
+
+	destDirPath, _ := path.Split(destFilePath)
+
+	tempDirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
+	defer os.RemoveAll(tempDirPath)
+	
+	if err != nil {
+		return err  
+	}
+
+	err = parallelCompressEachFile(tempDirPath, sourceDirPath, sourceFiles, threads, compressor) 
+	if err != nil {
+		return err 
+	}
+
+	err = rawFilesToZIP(destFilePath, tempDirPath, sourceFiles) 
+	if err != nil {
+		return err 
+	}
+	
 	return nil 
 
 }

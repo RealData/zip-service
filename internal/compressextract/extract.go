@@ -1,7 +1,6 @@
 package compressextract 
 import (
 	"archive/zip"
-	"compress/gzip"
 	"io" 
 	"os" 
 	"path"
@@ -26,8 +25,8 @@ func ExtractFileInfo(sourceFilePath string) ([]r.FileInfo, error)  {
 
 }
 
-// ZIPToRawFiles reads files from ZIP file 
-func ZIPToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, error) {
+// zipToRawFiles reads files from ZIP file 
+func zipToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, error) {
 
 	zipReader, err := zip.OpenReader(sourceFilePath) 
 	if err != nil {
@@ -49,33 +48,6 @@ func ZIPToRawFiles(destDirPath string, sourceFilePath string) ([]r.FileInfo, err
 	}
 
 	return files, nil 
-
-}
-
-// ExtractFileGZIP extracts compressed GZIP file 
-func ExtractFileGZIP(destFilePath string, sourceFilePath string) error {
-	
-	sourceFile, err := os.Open(sourceFilePath)
-	if err != nil {
-		return err 
-	} 
-	defer sourceFile.Close() 
-
-	destFile, err := os.Create(destFilePath) 
-	if err != nil {
-		return err 
-	} 
-	defer destFile.Close()
-
-	reader, err := gzip.NewReader(sourceFile) 
-	if err != nil {
-		return err 
-	} 
-	defer reader.Close() 
-
-	io.Copy(destFile, reader) 
-
-	return nil 
 
 }
 
@@ -116,13 +88,8 @@ func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFil
 
 }
 
-
-
-
-
-
-// ExtractEachFile extracts files from a list using specified compressor 
-func ExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, extractor Extractor) error { 
+// extractEachFile extracts files from a list using specified compressor 
+func extractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, extractor Extractor) error { 
 	for _, file := range sourceFiles { 
 		destFilePath := path.Join(destDirPath, file.Name)  
 		sourceFilePath := path.Join(sourceDirPath, file.Name) 
@@ -143,7 +110,7 @@ func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, threads int
 	}
 	defer os.RemoveAll(tempDirPath)
 
-	files, err := ZIPToRawFiles(tempDirPath, sourceFilePath)  
+	files, err := zipToRawFiles(tempDirPath, sourceFilePath)  
 	if err != nil {
 		return err 
     }

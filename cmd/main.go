@@ -4,13 +4,13 @@ import (
 	"flag"
 	"fmt" 
 	"os"
-//	"zip-service/internal/readdir" 
-	"zip-service/internal/compressextract" 
+    r "zip-service/internal/readdir" 
+	ce "zip-service/internal/compressextract" 
 )
 
 const (
 	TOP = 10 
-	METHOD = "zip" 
+	METHOD = "gzip" 
 	PATTERN = "" 
 	FILE = ""
 	DIR = "." 
@@ -62,28 +62,43 @@ func init() {
 	if len(dir) == 0 {
 		fmt.Println("Directory to compress/extract should be provided") 
 		os.Exit(1)
-	}
+	} 
 
 }
 
 func main() {
 
-	// files, err := readdir.ReadDirTopFiles(dir, pattern, top, threads) 
-	// if err != nil { 
-	// 	fmt.Println(err) 
-	// 	os.Exit(1)
-	// }
+	var compressor ce.Compressor  
+	var extractor ce.Extractor  
+	switch method {
+	case "gzip": 
+		compressor = ce.CompressFileGZIP 
+		extractor = ce.ExtractFileGZIP 
+	case "flate": 
+		compressor = ce.CompressFileFlate 
+		extractor = ce.ExtractFileFlate 
+	case "lzw": 
+		compressor = ce.CompressFileLZW 
+		extractor = ce.ExtractFileLZW 
+	case "zlib": 
+		compressor = ce.CompressFileZLIB 
+		extractor = ce.ExtractFileZLIB 
+	default: 
+		fmt.Printf("Method %s is not implemented", method) 
+		os.Exit(1)
+	}
 
-	// files = []readdir.FileInfo{{"FILE1", 5}, {"FILE2", 5}} 
 
-	// compressextract.CompressAndZipFiles(".", file, dir, files, threads, compressextract.CompressFileGZIP) 
-
-	// compressextract.ExtractFileNames(file) 
-
-	// compressextract.ZIPToRawFiles(file) 
-
-	// compressextract.ExtractFileZIP()
-
-	compressextract.UnzipAndExtractFiles(dir, file, compressextract.ExtractFileGZIP)
+	if  compress { 
+		files, err := r.ReadDirTopFiles(dir, pattern, top, threads) 
+		if err != nil { 
+			os.Exit(1)
+		}
+		ce.CompressAndZipFiles(file, dir, files, threads, compressor) 
+	}
+	
+	if extract {
+		ce.UnzipAndExtractFiles(dir, file, threads, extractor) 
+	}
 
 }
