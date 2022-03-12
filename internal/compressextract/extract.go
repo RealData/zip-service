@@ -8,8 +8,6 @@ import (
 	r "zip-service/internal/readdir"
 )
 
-type Extractor func(destFilePath string, sourceFilePath string) error  
-
 // ExtractFileInfo returns list of file info for files in a ZIP file 
 func ExtractFileInfo(sourceFilePath string) ([]r.FileInfo, error)  {
 
@@ -81,6 +79,48 @@ func ExtractFileGZIP(destFilePath string, sourceFilePath string) error {
 
 }
 
+func parallelExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, threads int, extractor Extractor) (err error) { 
+
+	numJobs := len(sourceFiles) 
+	jobChan := make(chan r.FileInfo, numJobs) 
+	resChan := make(chan error, numJobs) 
+	
+	if threads > numJobs {
+		threads = numJobs  
+	}
+
+	for w := 1; w <= threads; w++ {
+		go func(jobChan <-chan r.FileInfo, resChan chan<- error) {
+			for file := range jobChan { 
+				destFilePath := path.Join(destDirPath, file.Name)  
+				sourceFilePath := path.Join(sourceDirPath, file.Name) 
+				err := extractor(destFilePath, sourceFilePath)  
+				resChan <- err 
+			}
+		}(jobChan, resChan)
+	} 
+
+	for _, file := range sourceFiles {
+		jobChan <- file 
+	}
+	close(jobChan) 
+
+	for j := 1; j <= numJobs; j++ {
+		res := <- resChan 
+		if res != nil {
+			err = res  
+		}
+	}
+
+	return nil 
+
+}
+
+
+
+
+
+
 // ExtractEachFile extracts files from a list using specified compressor 
 func ExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.FileInfo, extractor Extractor) error { 
 	for _, file := range sourceFiles { 
@@ -95,19 +135,20 @@ func ExtractEachFile(destDirPath string, sourceDirPath string, sourceFiles []r.F
 } 
 
 // UnzipAndExtractFiles unzip ZIP file, writes them into temporary directory, and then extracts each file 
-func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, extractor Extractor) error {
+func UnzipAndExtractFiles(destDirPath string, sourceFilePath string, threads int, extractor Extractor) error {
 	
 	tempDirPath, err := os.MkdirTemp(destDirPath, "TEMP") 
 	if err != nil {
 	 	return err 
 	}
+	defer os.RemoveAll(tempDirPath)
 
 	files, err := ZIPToRawFiles(tempDirPath, sourceFilePath)  
 	if err != nil {
 		return err 
     }
 
-	err = ExtractEachFile(destDirPath, tempDirPath, files, extractor) 
+	err = parallelExtractEachFile(destDirPath, tempDirPath, files, threads, extractor) 
 	if err != nil {
 		return err 
 	}
