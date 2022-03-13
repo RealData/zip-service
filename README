@@ -1,0 +1,27 @@
+The `zip-service` compresses `top` top largest files from a specified directory and zips them into a `zip` file or extracts a `zip` file into a directory. Several compression methods are implemented, gzip, flate, lzw, zlib. Compression/extraction process is performed in parallel using `nthreads` threads. Selecting top files is also parallelized. Files for compression/extraction can be selected via `pattern` 
+
+#Compilation 
+To compile the program, run 
+`cd cmd` 
+`go build -o zip-service` 
+
+#Testing
+To run all tests from `zip-service` directory, run 
+`go test ./...` 
+
+#Running 
+`./zip-service [flags]`  
+Flags 
+ `-c` or `-compress`: Perform compression
+ `-d <dir>` or `-dir <dir>`: Directory to compress files from or extract files to
+ `-e` or `-extract`: Perform extraction
+ `-f <file>` or `-file <file>`: ZIP file to compress to or extract from
+ `-m <method>` or `-method <method>`: Select compression method from gzip, flate, lzw, zlib (default "gzip")
+ `-n <threads>` or `-nthreads <threads>`: Number of threads (default 1)
+ `-p <pattern>` or `-pattern <pattern>`: Use pattern to filter files (default "*") 
+ `-t <top>` or `-top <top>`: Select top files to compress/extract (default 10)
+Notes: 
+ - One and only one of -c and -e should be set 
+Example: 
+  `./zip-service -c -d DIR -f file.zip` 
+
