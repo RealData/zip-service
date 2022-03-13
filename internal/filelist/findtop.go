@@ -1,40 +1,40 @@
-package filelist 
+package filelist
 
-import ( 
+import (
 	"math"
-	"sort" 
+	"sort"
 	"sync"
 )
 
-// findTop finds top files by their size in a list of FileInfo. 
-// Two algorithms are implemented: linear search of top files and simple sort with successive selection of top files. 
-// Linear search is asymptotically more effective when `top < log(L) - log(threads)`, although experiments are needed to find the coefficients for this condition.  
+// findTop finds top files by their size in a list of FileInfo.
+// Two algorithms are implemented: linear search of top files and simple sort with successive selection of top files.
+// Linear search is asymptotically more effective when `top < log(L) - log(threads)`, although experiments are needed to find the coefficients for this condition.
 // This condition is approximately equivalent to `top < log(L)`
-func findTop(files []FileInfo, top int) []FileInfo { 
+func findTop(files []FileInfo, top int) []FileInfo {
 
 	l := len(files)
 	if l < top {
-		return files 
+		return files
 	}
 
 	if top < 1 {
 		return []FileInfo{}
 	}
 
-	// Use sort algorithm for small file lists or large `top` parameter values 
-	if float64(top) > math.Log(float64(l)) {  
-		sort.Slice(files, func(i int, j int) bool { return files[i].Size > files[j].Size }) 
+	// Use sort algorithm for small file lists or large `top` parameter values
+	if float64(top) > math.Log(float64(l)) {
+		sort.Slice(files, func(i int, j int) bool { return files[i].Size > files[j].Size })
 		return files[:top]
 	}
 
-	// Otherwise use linear search for top files 
+	// Otherwise use linear search for top files
 	for i := 0; i < top; i++ {
-		maxj := i   
-		maxv := files[maxj].Size 
+		maxj := i
+		maxv := files[maxj].Size
 		for j := i; j < len(files); j++ {
 			if size := files[j].Size; size > maxv {
-				maxj = j 
-				maxv = size 
+				maxj = j
+				maxv = size
 			}
 		}
 		files[i], files[maxj] = files[maxj], files[i]
@@ -44,47 +44,46 @@ func findTop(files []FileInfo, top int) []FileInfo {
 
 }
 
-// ParallelFindTop finds top fies by their size in a list of FileInfo. It splits the list into `threads` chunks and concurrently calls `findTop` for each of the chunks, the top files from the chunks are then merged, sorted, and `top` files are selected 
+// ParallelFindTop finds top fies by their size in a list of FileInfo. It splits the list into `threads` chunks and concurrently calls `findTop` for each of the chunks, the top files from the chunks are then merged, sorted, and `top` files are selected
 func ParallelFindTop(files []FileInfo, top int, threads int) []FileInfo {
 
 	if top < 1 {
-		return []FileInfo{} 
+		return []FileInfo{}
 	}
 
-	var wg sync.WaitGroup 
-	l := len(files) 
+	var wg sync.WaitGroup
+	l := len(files)
 
 	if threads > l {
-		threads = l 
-	} 
-
-	if l < top {
-		return files  
+		threads = l
 	}
 
-	res := make([]FileInfo, 0, threads * top)
-	resChan := make(chan []FileInfo, threads) 
+	if l < top {
+		return files
+	}
+
+	res := make([]FileInfo, 0, threads*top)
+	resChan := make(chan []FileInfo, threads)
 
 	for i := 0; i < threads; i++ {
-		wg.Add(1) 
-		go func(files []FileInfo, top int) { 
-			defer wg.Done() 
-			resChan<- findTop(files, top)   
+		wg.Add(1)
+		go func(files []FileInfo, top int) {
+			defer wg.Done()
+			resChan <- findTop(files, top)
 		}(files[i*l/threads:(i+1)*l/threads], top)
-	} 
+	}
 
 	go func() {
-		wg.Wait() 
-		close(resChan) 
-	}() 
+		wg.Wait()
+		close(resChan)
+	}()
 
 	for s := range resChan {
 		res = append(res, s...)
 	}
 
-	sort.Slice(res, func(i int, j int) bool { return res[i].Size > res[j].Size }) 
+	sort.Slice(res, func(i int, j int) bool { return res[i].Size > res[j].Size })
 
-	return res[:top]  
+	return res[:top]
 
-} 
-
+}

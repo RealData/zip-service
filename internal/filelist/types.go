@@ -1,6 +1,6 @@
-package filelist 
+package filelist
 
-type FileInfo struct {	
-	Name string 
-	Size int64  
+type FileInfo struct {
+	Name string
+	Size int64
 }

@@ -1,61 +1,61 @@
-package compressextract 
+package compressextract
 
 import (
-	"compress/zlib" 
+	"compress/zlib"
 	"io"
 	"os"
 )
 
-// CompressFileFlate compresses a file to ZLIB    
+// CompressFileFlate compresses a file to ZLIB
 func CompressFileZLIB(destFilePath string, sourceFilePath string) error {
 
 	sourceFile, err := os.Open(sourceFilePath)
 	if err != nil {
-		return err 
+		return err
 	}
-	
-	destFile, err := os.Create(destFilePath) 
+
+	destFile, err := os.Create(destFilePath)
 	if err != nil {
-		return err 
-	} 
+		return err
+	}
 
-	writer := zlib.NewWriter(destFile) 
+	writer := zlib.NewWriter(destFile)
 
-	defer sourceFile.Close() 
+	defer sourceFile.Close()
 	defer destFile.Close()
-	defer writer.Close() 
+	defer writer.Close()
 
-	io.Copy(writer, sourceFile) 
-	
-	writer.Close() 
+	io.Copy(writer, sourceFile)
 
-	return nil 
+	writer.Close()
 
-} 
+	return nil
 
-// ExtractFileFlate extracts compressed ZLIB file  
+}
+
+// ExtractFileFlate extracts compressed ZLIB file
 func ExtractFileZLIB(destFilePath string, sourceFilePath string) error {
-	
+
 	sourceFile, err := os.Open(sourceFilePath)
 	if err != nil {
-		return err 
-	} 
-	defer sourceFile.Close() 
+		return err
+	}
+	defer sourceFile.Close()
 
-	destFile, err := os.Create(destFilePath) 
+	destFile, err := os.Create(destFilePath)
 	if err != nil {
-		return err 
-	} 
+		return err
+	}
 	defer destFile.Close()
 
-	reader, err := zlib.NewReader(sourceFile) 
+	reader, err := zlib.NewReader(sourceFile)
 	if err != nil {
-		return err 
-	} 
-	defer reader.Close() 
+		return err
+	}
+	defer reader.Close()
 
-	io.Copy(destFile, reader) 
+	io.Copy(destFile, reader)
 
-	return nil 
+	return nil
 
 }

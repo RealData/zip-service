@@ -1,37 +1,35 @@
-package readdir 
+package readdir
 
 import (
-	"os" 
-	"zip-service/internal/filelist" 
+	"os"
+	"zip-service/internal/filelist"
 )
-
 
 // ReadDir reads file info from a directory filtering out subdirectories
 func readDir(dirPath string) ([]filelist.FileInfo, error) {
-	
-	dir, err := os.Open(dirPath) 
+
+	dir, err := os.Open(dirPath)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
-	defer dir.Close() 
-	
-	dirContent, err := dir.ReadDir(-1) 
+	defer dir.Close()
+
+	dirContent, err := dir.ReadDir(-1)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
-	files := make([]filelist.FileInfo, 0, len(dirContent)) 
-	for _, file := range dirContent { 
-		info, err := file.Info() 
+	files := make([]filelist.FileInfo, 0, len(dirContent))
+	for _, file := range dirContent {
+		info, err := file.Info()
 		if err != nil {
-			return nil, err 
-		} 
-		if !info.IsDir() { 
-			files = append(files, filelist.FileInfo{info.Name(), info.Size()}) 
+			return nil, err
 		}
-	} 
+		if !info.IsDir() {
+			files = append(files, filelist.FileInfo{info.Name(), info.Size()})
+		}
+	}
 
-	return files, nil 
+	return files, nil
 
 }
-
