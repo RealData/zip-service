@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
     - name: Setup 
-      run: echo ${{github}} 
+      env: 
+        h: ${{ job.status }} 
+      run: echo $h   
       
     - name: Checkout 
       uses: actions/checkout@v3 
