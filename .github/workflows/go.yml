@@ -10,7 +10,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    steps:
+    steps: 
+    - name: Setup 
+      run: echo ${{github}} 
+      
     - name: Checkout 
       uses: actions/checkout@v3 
 
