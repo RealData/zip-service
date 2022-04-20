@@ -31,6 +31,7 @@ jobs:
       run: go test -v ./... 
 
   run: 
+    needs: build 
     runs-on: ubuntu-latest 
     steps: 
     - name: Checkout 
@@ -41,4 +42,4 @@ jobs:
       with: 
         go-version: 1.17 
     - name: Run 
-      run: go run ./cmd/main.go -c -d . -f main 
+      run: ./main -d . -c -f H  
