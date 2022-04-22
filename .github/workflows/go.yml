@@ -26,6 +26,9 @@ jobs:
 
     - name: Build
       run: go build -o bin/ -v ./... 
+      
+    - name: List 
+      run: ls -l -a 
 
     - name: Test
       run: go test -v ./... 
@@ -41,5 +44,6 @@ jobs:
       uses: actions/setup-go@v3 
       with: 
         go-version: 1.17 
+        
     - name: Run 
       run: ./bin/cmd -d -c -f H 
