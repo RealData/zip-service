@@ -28,7 +28,8 @@ jobs:
       run: go build -o bin/ -v ./... 
       
     - name: List 
-      run: ls -l -a 
+      run: | ls -l -a 
+            ls -l -a bin 
 
     - name: Test
       run: go test -v ./... 
@@ -45,5 +46,9 @@ jobs:
       with: 
         go-version: 1.17 
         
+    - name: List 
+      run: | ls -l -a 
+            ls -l -a bin 
+    
     - name: Run 
       run: ./bin/cmd -d -c -f H 
