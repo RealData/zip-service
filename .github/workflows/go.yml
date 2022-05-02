@@ -48,7 +48,8 @@ jobs:
         go-version: 1.17 
         
     - name: List 
-      run: | ls -l -a 
+      run: | 
+            ls -l -a 
             ls -l -a bin 
     
     - name: Run 
