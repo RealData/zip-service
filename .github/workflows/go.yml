@@ -36,4 +36,4 @@ jobs:
       run: go test -v ./... 
 
     - name: Run 
-      run: ./bin/cmd -d -c -f H 
+      run: ./bin/cmd -d . -c -f H 
